@@ -1,0 +1,17 @@
+Week 1
+======
+
+Week 2
+======
+Use dot notation in search for matching portions of a document.
+For example, given the document:
+
+{name:"Sri", email: { work: "sri@work.com", home: "sri@home.com"}}
+
+The following will find the above doc:
+
+c.find({"email.work": "sri@work.com"})
+
+however the following will not
+
+c.find({email: {work: "sri@work.com"}})
