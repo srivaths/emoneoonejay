@@ -34,3 +34,24 @@ here is the type value for a 32-bit integer in the BSON spec
 
 regex searches are not as optimzable as normal string comparison
 searches.
+
+Searching in an array:
+Given the collection:
+{ name: "Fred", interests: ["Running", "Tennis"]}
+{ name: "Mary", interests: ["Running"]}
+
+The search
+c.find({interests:"Running"})
+
+will find both documents as will
+
+c.find({interests: {$all: ["Running"]}})
+
+the $all operator finds all documents that have "all" the elements
+in the operand array (["Running"])
+
+cursors
+sort & limit happen on the database and not on the results of a
+fetch.
+
+sort, then skip and then limit <-- Things happen in that order.
