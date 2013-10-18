@@ -15,3 +15,22 @@ c.find({"email.work": "sri@work.com"})
 however the following will not
 
 c.find({email: {work: "sri@work.com"}})
+
+All comparison operations in MongoDB are strongly & dynamically typed.
+
+c.find({name: {$gt: "M", $lt: "X"}})
+
+will only search for documents where the name is a String.  IOW if the 
+'name' field has non-numeric values in some document they will not 
+be tested for this comparison.
+
+Searching for a field by its type.
+For example: Find all documents where the name field is a number
+
+c.find({name: {$type: 10}})
+
+here is the type value for a 32-bit integer in the BSON spec
+(see http://bsonspec.org/#/specification)
+
+regex searches are not as optimzable as normal string comparison
+searches.
