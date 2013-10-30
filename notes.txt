@@ -55,3 +55,51 @@ sort & limit happen on the database and not on the results of a
 fetch.
 
 sort, then skip and then limit <-- Things happen in that order.
+
+Week 3
+======
+
+More on indexes in week 4.
+Did an index get used? --> Use the explain() command.
+Multikey index is an index on a key whose value is an array.
+Week 4
+======
+Discovering indexes...
+
+system.indexes is one of the collections that automatically gets created
+when you add a collection to a db.
+
+db.system.indexes.find()     -- Lists all indexes in the db.
+some_collection.getIndexes() -- Lists all indexes in some_collection.
+
+Cannot create a compound multi-key index, i.e. an index involving 2 keys
+both of whose values are arrays. Yes, one can an array.
+
+Unique indexes....
+
+A unique index enforces the constraint that a key can appear only once
+in the index.
+The automatically created index on _id is implicitly unique.  The call
+
+some_collection.getIndexes()
+
+will not show the "unique:true" setting for the index on _id.
+
+Unique index & drop dups
+> db.collection.ensureIndex({key:1}, {unique:true, dropDups:true})
+
+Dangerous.  Can't guarantee *which* duplicate elements are removed.
+
+
+Sparse Index
+
+Essential when the key is unique.  Imagine a case where the key being
+indexed does not occur on multiple documents.  The value for this
+key null according the indexing logic.  However the uniquness constraint
+precludes duplicate values for the indexed key.  Enter the sparse index.
+A sparse index will only index documents which *do* contain the key
+being indexed.  From the perspective of the index it is as if the other
+documents in the collection do not even exist!
+
+> db.collection.ensureIndex({key:1}, {unique:true, sparse:true})
+
