@@ -95,7 +95,7 @@ Sparse Index
 
 Essential when the key is unique.  Imagine a case where the key being
 indexed does not occur on multiple documents.  The value for this
-key null according the indexing logic.  However the uniquness constraint
+key is null according the indexing logic.  However the uniquness constraint
 precludes duplicate values for the indexed key.  Enter the sparse index.
 A sparse index will only index documents which *do* contain the key
 being indexed.  From the perspective of the index it is as if the other
@@ -103,3 +103,19 @@ documents in the collection do not even exist!
 
 > db.collection.ensureIndex({key:1}, {unique:true, sparse:true})
 
+Explain
+Obtained if we issue
+
+> db.collection.find({query}).explain()
+
+Covered index 
+An index that fully satisfies the search query (without having to look at
+the underlying document).
+
+Providing a hint - Telling Mongo *which* of the indexes to use.
+ hint({natural:1}) => Don't use an index
+
+Using $gt, $lt, $ne can result in inefficient use of indexes
+Stemmed regexes (once with a begins with clause) like /^342/ can use an index.
+
+Choosing the correct index (using hinting) is crucial to ensure optimal performance.
