@@ -1,0 +1,77 @@
+Replication
+
+Proivdes for availability and fault tolerance
+To elect a new primary the remaining nodes must represent a strict majority
+of the original number of nodes.  Hence the minimal size of a replica set
+is 3.
+Data replication to the nodes in the replica sets is asynchronous and the 
+lag between two nodes cannot be predicted.
+
+Types of replica set nodes
+  - Regular
+	  Normal node.  
+		Has data
+		Participates in elections
+		Can become primary or secondary.
+	- Arbiter: 
+	  For voting only to ensure strict majority in the event of primary outage
+	  No data
+		Participates in elections
+		Cannot become primary
+	- Delayed
+	  Typically for disaster recovery purposes.
+		Contains data (could be stale)
+		Participates in elections
+		Cannot become primary (priority 0)
+	- Hidden
+	  Used for analytics
+		Contains data
+		Participates in elections
+		Cannot become primary (priority 0)
+
+Must write to primary
+Can read from secondary.
+
+Creating a replica set:
+
+mongod --replSet rsName \
+       --dbpath  /path/to/data/files \
+			 --logpath /path/to/log/files \
+			 --port    mongod-listen-port \
+			 --fork
+
+After running n (> 2) instances of the above you will have n instances of mongod.
+However these are still n *independent* instances.  They need to be tied together
+to form a replica set.  This is done via an initialization thusly:
+
+config = {    _id: chosen-rs-name,
+          members: [ {        _id: 0, 
+					                   host: "fqdn:port", 
+											   priority: optional_unless_0, 
+											 slaveDelay: optional_in_secs
+										 },
+                     {        _id: 1, 
+					                   host: "fqdn:port", 
+											   priority: optional_unless_0, 
+											 slaveDelay: optional_in_secs
+										 }
+										 ...
+									 ]
+				 }
+
+You cannot initialize a replica set from a host that cannot become primary!
+
+mongod> rs.initiate(config)		
+
+While replica set is initializing a mongo instance will consider itself secondary.
+After initial elections it will set itself right.  This can (sometimes) be 
+evidenced by a mongo shell prompt that changes automatically.
+Running rs.status() during initialzation will report statusStr as "RECOVERING"
+which translates to that node being secondary.
+Subsequent invocations of rs.status() will show a statusStr of "PRIMARY" or
+"SECONDARY".
+
+In order to read from a secondary you must first issue
+
+rs.slaveOk()
+
