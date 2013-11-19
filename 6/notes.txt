@@ -75,3 +75,85 @@ In order to read from a secondary you must first issue
 
 rs.slaveOk()
 
+Op log - captures all operations done on a node.
+It is a capped collection, i.e. fixed size.
+Documents in a capped collection do not need the _id key.
+
+Replication is triggered by a secondary node asking the primary node
+for changes since a certain time stamp.  The primary responds with the
+appropriate segment of the oplog.  When it is written on the secondary
+now the secondary will have a similar oplog.
+
+Failover (change of primary) can result in a subsequent rollback.
+This can happen when the original primary comes back (now as a 
+secondary) if it has write operations that don't exist in any of the
+other nodes.  This can happen if the orignal primary went down before
+these write operations were replicated on other nodes.
+
+
+Using the seedlist with at least one node from a replicaset will
+result in the MongoClient class discovering the primary (write)
+node.
+
+Write concern
+When an insert happens, 3 things actually happen.
+ 1) The actual insert into RAM
+ 2) A journal entry of the insersion (provides recoverability)
+ 3) A write to the data directory (an fsync of RAM to disk)
+
+The getLastError() call.  There are 3 levels of responses for which
+this call will wait.
+ 1) Write to RAM (w = 1)
+ 2) Write to journal (j = true)
+ 3) Write to disk (fsync = true)
+In a replicated environment a client application can choose to wait
+not just for the primary to write but one or more secondaries to 
+complete a write operation.  This is done by setting the 'w' value
+appropriately
+w = 2
+will result in getLastError() to wait not only for the primary to 
+finish writing but also at least one of the secondaries. To ensure
+that writes are acknowledged by a majority of the nodes in a replica
+set use w = majority
+Default value for w = 1
+
+Read preferences
+The client application can specify from *where* the reads must happen.
+Primary is default.  Other options include secondary, secondary 
+preferred (will use primary if secondary isn't available), primary
+preferred and nearest (scatter reads between nodes that are within
+15ms of the node with the fastest ping time).
+
+Sharding
+Sharding is used for horizontal scaling.
+It is range-based
+Once a collection is sharded inserts must include the shard key
+There must already be an index on the chosen shard key.  The exception
+is the case of an empty collection.
+
+config servers have information about the distribution of the chunks
+in a sharded environment.
+
+sh.help() lists available shard commands in the shell
+
+- Every doc in the collection being sharded must include the shard key
+- Value corresponding to shard key cannot be changed
+- Must include a non-multikey index that starts with the shard key
+- Unique index must be part of the shard key
+
+mongos can be replicated as well.
+
+Choosing a shard key
+- Key must have sufficient cardinality 
+  Keep in mind that Mongo sharding is based on range of values of the
+	shard key.  Each shard has a (min, max) range of values for the
+	shard key.  If the number of shards is larger than the possible
+	values of the shard key will result in several nodes of the shard
+	not being used at all.
+- Key must not be monotonically increasing
+  Suppose the values for the chosen key are such that they will only 
+	ever increase (e.g. date, serial number, etc).  This will mean that
+	all new inserts will go against the same shard - the one identified
+	for the largest key values.
+	Using a key with monotonically increasing values results in
+	hotspotting.
