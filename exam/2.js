@@ -7,12 +7,14 @@ c.aggregate([
   // Remove duplicate from-to pairs
 	, { $unwind: "$toList"}
 	, { $group: { _id: "$from", uniqueRecipients:{ $addToSet: "$toList"}}}
-	, { $project: { _id:0, from: "$_id", to: "$uniqueRecipients" }}
-  , { $sort: {from:1  }}
 	
   // Expand the recipients array
-	//, { $unwind: "$uniqueRecipients"}
-	//, { $project: { _id:0, from: "$_id", to: "$uniqueRecipients" }}
+	, { $unwind: "$uniqueRecipients"}
+	, { $project: { _id:0, from: "$_id", to: "$uniqueRecipients" }}
 
-	//, { $group: { _id: {from:"$from", to:"$to"}, count: {$sum: 1}}}
+	// Get a count of number of emails between any given from-to pair
+	, { $group: { _id: {from:"$from", to:"$to"}, count: {$sum: 1}}}
+	
+	// Locate documents that have a count value > 1
+	, { $match: { count: {$gt:1}}}
   ])
