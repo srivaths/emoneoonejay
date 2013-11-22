@@ -8,7 +8,7 @@ c.aggregate([
 	, { $unwind: "$toList"}
 	, { $group: { _id: "$from", uniqueRecipients:{ $addToSet: "$toList"}}}
 	, { $project: { _id:0, from: "$_id", to: "$uniqueRecipients" }}
-  , { $sort: {from:1}}
+  , { $sort: {from:1  }}
 	
   // Expand the recipients array
 	//, { $unwind: "$uniqueRecipients"}
