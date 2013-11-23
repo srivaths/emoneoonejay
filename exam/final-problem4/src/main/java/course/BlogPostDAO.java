@@ -110,12 +110,28 @@ public class BlogPostDAO {
     }
 
     public void likePost(final String permalink, final int ordinal) {
+    	// XXX Final Exam, Please work here
+    	// Add code to increment the num_likes for the 'ordinal' comment
+    	// that was clicked on.
+    	// provided you use num_likes as your key name, no other changes should be required
+    	// alternatively, you can use whatever you like but will need to make a couple of other 
+    	// changes to templates and post retrieval code.
+      DBObject post = postsCollection.findOne(new BasicDBObject("permalink", permalink));
 
-	// XXX Final Exam, Please work here
-	// Add code to increment the num_likes for the 'ordinal' comment
-	// that was clicked on.
-	// provided you use num_likes as your key name, no other changes should be required
-	// alternatively, you can use whatever you like but will need to make a couple of other 
-	// changes to templates and post retrieval code.
+      if (post != null) {
+        List<DBObject> comments = (List<DBObject>) post.get("comments");
+        DBObject comment = comments.get(ordinal);
+        int num_likes = 1;
+        if (comment.containsField("num_likes")) {
+          num_likes = (Integer)comment.get("num_likes");
+          num_likes++;
+        } else {
+          System.out.printf("Post '%s' did not have a num_likes field for comment #%d.\n", permalink, ordinal);
+        }
+        System.out.printf("Setting num_likes for post '%s' to %d.\n", permalink, num_likes);
+        comment.put("num_likes", num_likes);
+        postsCollection.update(new BasicDBObject("permalink", permalink), post);
+      }
+
     }
 }
