@@ -2,17 +2,16 @@ use enron
 c = db.messages
 c.aggregate([
 	// Grab only the from & to
-	{ $project: { _id: "$_id", from: "$headers.From", toList: "$headers.To"}}
+	{ $project: { from: "$headers.From", toList: "$headers.To"}}
 	
   // Remove duplicate from-to pairs
 	, { $unwind: "$toList"}
-	, { $group: { _id: {theId:"$_id", from:"$from"}, uniqueRecipients:{ $addToSet: "$toList"}}}
+	, { $group: { _id: {theId:"$_id", theFrom:"$from"}, uniqueRecipients:{ $addToSet: "$toList"}}}
+  , { $project: { from: "$_id.theFrom", to: "$uniqueRecipients"}}
 	
-//	, { $unwind: "$uniqueRecipients"}
-//	, { $project: { _id:0, from: "$_id", to: "$uniqueRecipients" }}
+	, { $unwind: "$to"}
 
 	// Get a count of number of emails between any given from-to pair
-//	, { $group: { _id: {from:"$from", to:"$toList"}, count: {$sum: 1}}}
-	
-//	, { $sort: { count: 1}}
-  ])
+	, { $group: { _id: {from:"$from", to:"$to"}, count: {$sum: 1}}}
+  , { $sort: {count:1}}
+])
