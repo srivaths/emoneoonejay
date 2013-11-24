@@ -103,15 +103,58 @@ documents in the collection do not even exist!
 
 > db.collection.ensureIndex({key:1}, {unique:true, sparse:true})
 
+--------------------
+
 Explain
 Obtained if we issue
 
 > db.collection.find({query}).explain()
 
+--------------------
+
+In order for an index to be used some left subset of the indexed keys
+must be specified in the query.  For example: Given the index
+
+db.coll.ensureIndex({d:1, c:1, b:1, a:1})
+
+The follow depicts whether or not this index can be used:
+
+Query includes d    => Yes
+Query includes d, c => Yes
+Query includes d, b => Yes
+Query includes c, b => No
+
+--------------------
+
+Indexes should be selective
+IOW the use of the index should reduce the number of search operations.
+You initial keys in your index should reduce the number of searches
+possible.  For e.g. given a collection that records every day you
+purchased a fruit and the type of fruit you purchased 
+
+db.coll.ensureIndex({timestamp:1, fruit_type:1})
+
+would be more useful than
+
+db.coll.ensureIndex({fruit_type:1, timestamp:1})
+
+--------------------
+
+The following detrimental to the efficiency of indexes
+$gt, $lt, $ne, $notin, $notexists, non-stemmed regex (/abcd/ vs /^abcd/)
+
+These can result in the index being used by may cause more docs to 
+be scanned.
+
+--------------------
+
 Covered index 
 An index that fully satisfies the search query (without having to look at
 the underlying document).
 
+Whether or not a query and the fields to be returned can be serviced
+by the index without having to refer back to the underlying document.
+======================================================
 
 Week 5
 Aggregation framework
