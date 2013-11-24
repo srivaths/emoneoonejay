@@ -3,3 +3,6 @@
 *.gz
 *.*~
 *.class
+*.out
+dump/
+target/
